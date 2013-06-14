@@ -5,13 +5,18 @@
   <script src="https://cdn.firebase.com/v0/firebase.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
   <script src="https://www.firebase.com/js/libs/idle.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.0.0/moment.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://www.firebase.com/css/example.css">
 </head>
 <body>
 <div id="presenceDiv"></div>
+<hr/>
+<div>
+  <a href="https://github.com/firebase/presence">Check out the code!</a>
+</div>
 <script>
   // Prompt the user for a name to use.
-  var name = prompt("Your name?", "Guest"),
+  var name = prompt("Your name?", "Guest " + Math.floor(Math.random() * 1001)),
       currentStatus = "★ online";
 
   // Get a reference to the presence data in Firebase.
@@ -25,8 +30,9 @@
   connectedRef.on("value", function(isOnline) {
     if (isOnline.val()) {
       // If we lose our internet connection, update our last online time.
-      myUserRef.child("status").onDisconnect().set(
-        "Last seen at " + Firebase.ServerValue.TIMESTAMP);
+      myUserRef.onDisconnect().set({
+        status: "☽ offline", name: name, last: Firebase.ServerValue.TIMESTAMP
+      });
       // Set our initial online status.
       setUserStatus("★ online");
     } else {
@@ -49,6 +55,13 @@
     var user = snapshot.val();
     $("#presenceDiv").append($("<div/>").attr("id", snapshot.name()));
     $("#" + snapshot.name()).text(user.name + " is currently " + user.status);
+    // If offline, show last time user was online.
+    if (user.status == "☽ offline") {
+      var ts = moment(user.last);
+      var ls = " (Last seen on " + ts.format("ddd, MMM D") + " at " +
+        ts.format("hh:ss") + ")";
+      $("#" + snapshot.name()).append($("<br>")).append($("<p>").text(ls));
+    }
   });
 
   // Update our GUI to remove the status of a user who has left.
