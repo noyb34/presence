@@ -15,7 +15,7 @@
       currentStatus = "★ online";
 
   // Get a reference to the presence data in Firebase.
-  var userListRef = new Firebase("https://u4iwjckpr5e.firebaseio-demo.com/");
+  var userListRef = new Firebase("https://presence.firebaseio-demo.com/");
 
   // Generate a reference to a new location for my user with push.
   var myUserRef = userListRef.push();
@@ -24,16 +24,15 @@
   var connectedRef = new Firebase("http://presence.firebaseio-demo.com/.info/connected");
   connectedRef.on("value", function(isOnline) {
     if (isOnline.val()) {
-      // If we lose our internet connection, we want ourselves removed from the list.
-      myUserRef.onDisconnect().remove();
-
+      // If we lose our internet connection, update our last online time.
+      myUserRef.child("status").onDisconnect().set(
+        "Last seen at " + Firebase.ServerValue.TIMESTAMP);
       // Set our initial online status.
       setUserStatus("★ online");
     } else {
-
-      // We need to catch anytime we are marked as offline and then set the correct status. We
-      // could be marked as offline 1) on page load or 2) when we lose our internet connection
-      // temporarily.
+      // We need to catch anytime we are marked as offline and then set
+      // the correct status. We could be marked as offline 1) on page load
+      // or 2) when we lose our internet connection temporarily.
       setUserStatus(currentStatus);
     }
   });
